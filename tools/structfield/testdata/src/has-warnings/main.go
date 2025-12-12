@@ -22,6 +22,8 @@ type JSONFieldType struct {
 	PointerToSliceOfPointerStructs *[]*Struct         `json:"pointer_to_slice_of_pointer_structs,omitempty"` // want `change the "PointerToSliceOfPointerStructs" field type to "\[\]\*Struct" in the struct "JSONFieldType"`
 	PointerToMap                   *map[string]string `json:"pointer_to_map,omitempty"`                      // want `change the "PointerToMap" field type to "map\[string\]string" in the struct "JSONFieldType"`
 	SliceOfInts                    []*int             `json:"slice_of_ints,omitempty"`                       // want `change the "SliceOfInts" field type to "\[\]int" in the struct "JSONFieldType"`
+	StructOmitempty                Struct             `json:"struct_omitempty,omitempty"`                    // want `change the "StructOmitempty" field tag to use "omitzero" instead of "omitempty" in the struct "JSONFieldType"`
+	StructOmitzero                 Struct             `json:"struct_omitzero,omitzero"`                      // want `change the "StructOmitzero" field type to \*Struct type in the struct "JSONFieldType"`
 }
 
 type Struct struct{}

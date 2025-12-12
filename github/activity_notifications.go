@@ -101,7 +101,7 @@ func (s *ActivityService) ListRepositoryNotifications(ctx context.Context, owner
 }
 
 type markReadOptions struct {
-	LastReadAt Timestamp `json:"last_read_at,omitempty"`
+	LastReadAt Timestamp `json:"last_read_at,omitzero"`
 }
 
 // MarkNotificationsRead marks all notifications up to lastRead as read.

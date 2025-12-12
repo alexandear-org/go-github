@@ -136,12 +136,12 @@ func processStructField(structName string, field *ast.Field, pass *analysis.Pass
 	tagValue := strings.Trim(field.Tag.Value, "`")
 	structTag := reflect.StructTag(tagValue)
 
-	processTag(structName, goField, field, structTag, "json", pass, allowedTagNames, allowedTagTypes)
-	processTag(structName, goField, field, structTag, "url", pass, allowedTagNames, allowedTagTypes)
+	processJSONTag(structName, goField, field, structTag, pass, allowedTagNames, allowedTagTypes)
+	processURLTag(structName, goField, field, structTag, pass, allowedTagNames, allowedTagTypes)
 }
 
-func processTag(structName string, goField *ast.Ident, field *ast.Field, structTag reflect.StructTag, tagType string, pass *analysis.Pass, allowedTagNames, allowedTagTypes map[string]bool) {
-	tagName, ok := structTag.Lookup(tagType)
+func processJSONTag(structName string, goField *ast.Ident, field *ast.Field, structTag reflect.StructTag, pass *analysis.Pass, allowedTagNames, allowedTagTypes map[string]bool) {
+	tagName, ok := structTag.Lookup("json")
 	if !ok || tagName == "-" {
 		return
 	}
@@ -151,9 +151,26 @@ func processTag(structName string, goField *ast.Ident, field *ast.Field, structT
 		tagName = strings.ReplaceAll(tagName, ",omitempty", "")
 	}
 
-	if tagType == "url" {
-		tagName = strings.ReplaceAll(tagName, ",comma", "")
+	if strings.Contains(tagName, ",omitzero") {
+		checkStructTypeWithOmitzero(structName, goField.Name, field, field.Type.Pos(), pass, allowedTagTypes)
+		tagName = strings.ReplaceAll(tagName, ",omitzero", "")
 	}
+
+	checkGoFieldName(structName, goField.Name, tagName, goField.Pos(), pass, allowedTagNames)
+}
+
+func processURLTag(structName string, goField *ast.Ident, field *ast.Field, structTag reflect.StructTag, pass *analysis.Pass, allowedTagNames, allowedTagTypes map[string]bool) {
+	tagName, ok := structTag.Lookup("url")
+	if !ok || tagName == "-" {
+		return
+	}
+
+	if strings.Contains(tagName, ",omitempty") {
+		checkGoFieldType(structName, goField.Name, field, field.Type.Pos(), pass, allowedTagTypes)
+		tagName = strings.ReplaceAll(tagName, ",omitempty", "")
+	}
+
+	tagName = strings.ReplaceAll(tagName, ",comma", "")
 
 	checkGoFieldName(structName, goField.Name, tagName, goField.Pos(), pass, allowedTagNames)
 }
@@ -179,9 +196,39 @@ func checkGoFieldType(structName, goFieldName string, field *ast.Field, tokenPos
 	skipOmitempty := checkAndReportInvalidTypes(structName, goFieldName, field.Type, tokenPos, pass)
 
 	if !skipOmitempty {
-		const msg = `change the %q field type to %q in the struct %q because its tag uses "omitempty"`
-		pass.Reportf(tokenPos, msg, goFieldName, "*"+exprToString(field.Type), structName)
+		// For struct types, suggest omitzero instead of omitempty
+		if isStructType(field.Type) {
+			const msg = `change the %q field tag to use "omitzero" instead of "omitempty" in the struct %q`
+			pass.Reportf(tokenPos, msg, goFieldName, structName)
+		} else {
+			const msg = `change the %q field type to %q in the struct %q because its tag uses "omitempty"`
+			pass.Reportf(tokenPos, msg, goFieldName, "*"+exprToString(field.Type), structName)
+		}
 	}
+}
+
+func checkStructTypeWithOmitzero(structName, goFieldName string, field *ast.Field, tokenPos token.Pos, pass *analysis.Pass, allowedTypes map[string]bool) {
+	if allowedTypes[structName+"."+goFieldName] {
+		return
+	}
+
+	// omitzero on struct types should use pointer instead
+	if isStructType(field.Type) {
+		const msg = `change the %q field type to *%s type in the struct %q`
+		pass.Reportf(tokenPos, msg, goFieldName, exprToString(field.Type), structName)
+	}
+}
+
+func isStructType(expr ast.Expr) bool {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		// Check if it's a user-defined type (not a builtin)
+		return e.Obj != nil && e.Obj.Decl != nil
+	case *ast.SelectorExpr:
+		// For package.Type patterns
+		return true
+	}
+	return false
 }
 
 func checkAndReportInvalidTypes(structName, goFieldName string, fieldType ast.Expr, tokenPos token.Pos, pass *analysis.Pass) bool {
