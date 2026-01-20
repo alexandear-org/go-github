@@ -30,12 +30,6 @@ func (i SubIssue) String() string {
 	return Stringify(i)
 }
 
-// SubIssueListByIssueOptions specifies the optional parameters to the
-// SubIssueService.ListByIssue method.
-type SubIssueListByIssueOptions struct {
-	IssueListByRepoOptions
-}
-
 // SubIssueRequest represents a request to add, remove, or reprioritize sub-issues.
 type SubIssueRequest struct {
 	SubIssueID    int64  `json:"sub_issue_id"`             // Required: The ID of the sub-issue
