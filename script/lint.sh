@@ -5,6 +5,10 @@
 
 set -e
 
+# Handle interruption (Ctrl+C)
+INTERRUPTED=0
+trap 'INTERRUPTED=1' INT
+
 CUSTOM_GCL="$(script/setup-custom-gcl.sh)"
 
 CDPATH="" cd -- "$(dirname -- "$0")/.."
@@ -20,6 +24,7 @@ fail() {
 MOD_DIRS="$(git ls-files '*go.mod' | xargs dirname | sort)"
 
 for dir in $MOD_DIRS; do
+  [ "$INTERRUPTED" = "1" ] && break
   [ "$dir" = "example/newreposecretwithlibsodium" ] && continue
   echo linting "$dir"
   (
@@ -33,9 +38,13 @@ if [ -n "$CHECK_GITHUB_OPENAPI" ]; then
   script/metadata.sh update-openapi --validate || fail "failed validating openapi_operations.yaml"
 fi
 
-echo validating generated files
-script/generate.sh --check || fail "failed validating generated files"
+if [ "$INTERRUPTED" != "1" ]; then
+  echo validating generated files
+  script/generate.sh --check || fail "failed validating generated files"
+fi
 
-[ -z "$FAILED" ] || exit 1
+if [ "$INTERRUPTED" = "1" ]; then
+  exit 130
+fi
 
 exit "$EXIT_CODE"

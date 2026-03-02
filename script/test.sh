@@ -6,6 +6,10 @@
 
 set -e
 
+# Handle interruption (Ctrl+C)
+INTERRUPTED=0
+trap 'INTERRUPTED=1' INT
+
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 if [ "$#" = "0" ]; then
@@ -19,6 +23,7 @@ fi
 MOD_DIRS="$(git ls-files '*go.mod' | xargs dirname | sort)"
 
 for dir in $MOD_DIRS; do
+  [ "$INTERRUPTED" = "1" ] && break
   [ "$dir" = "example/newreposecretwithlibsodium" ] && continue
   echo "testing $dir"
   (
@@ -26,6 +31,10 @@ for dir in $MOD_DIRS; do
     go test "$@"
   ) || FAILED=1
 done
+
+if [ "$INTERRUPTED" = "1" ]; then
+  exit 130
+fi
 
 if [ -n "$FAILED" ]; then
   exit 1
