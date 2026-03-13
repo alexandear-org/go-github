@@ -8,6 +8,14 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
+# Colors & Formatting
+RED='\033[0;31m'
+NC='\033[0m'
+
+now_epoch() {
+  date +%s
+}
+
 if [ "$1" = "--check" ]; then
   GENTEMP="$(mktemp -d)"
   git worktree add -q --detach "$GENTEMP"
@@ -33,7 +41,7 @@ if [ "$1" = "--check" ]; then
       if [ -n "$GITHUB_ACTIONS" ]; then
         echo "::error ::$msg"
       else
-        echo "$msg" 1>&2
+        printf "${RED}%s${NC}\n" "$msg" 1>&2
       fi
       git diff
       exit 1
@@ -42,13 +50,36 @@ if [ "$1" = "--check" ]; then
   exit 0
 fi
 
+STAGE_NAME="generate"
+STAGE_START_EPOCH="$(now_epoch)"
+
 MOD_DIRS="$(git ls-files '*go.mod' | xargs dirname | sort)"
 
-for dir in $MOD_DIRS; do
+for DIR in $MOD_DIRS; do
+  MODULE_STAGE_NAME="$DIR"
+  MODULE_START_EPOCH="$(now_epoch)"
+
   (
-    cd "$dir"
+    cd "$DIR" > /dev/null
     go generate ./...
     go mod tidy
   )
+
+  MODULE_END_EPOCH="$(now_epoch)"
+  MODULE_ELAPSED=$((MODULE_END_EPOCH - MODULE_START_EPOCH))
+  printf '[%s: %s] elapsed %ss\n' \
+    "$STAGE_NAME" "$MODULE_STAGE_NAME" "$MODULE_ELAPSED"
 done
+
+STRUCTFIELD_STAGE_NAME="check-structfield-settings"
+STRUCTFIELD_START_EPOCH="$(now_epoch)"
 script/run-check-structfield-settings.sh -fix
+STRUCTFIELD_END_EPOCH="$(now_epoch)"
+STRUCTFIELD_ELAPSED=$((STRUCTFIELD_END_EPOCH - STRUCTFIELD_START_EPOCH))
+printf '[%s: %s] elapsed %ss\n' \
+  "$STAGE_NAME" "$STRUCTFIELD_STAGE_NAME" "$STRUCTFIELD_ELAPSED"
+
+STAGE_END_EPOCH="$(now_epoch)"
+STAGE_ELAPSED=$((STAGE_END_EPOCH - STAGE_START_EPOCH))
+printf '[%s] elapsed %ss\n' \
+  "$STAGE_NAME" "$STAGE_ELAPSED"
