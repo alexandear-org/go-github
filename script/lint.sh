@@ -65,11 +65,12 @@ wait_pids() {
     DIR=$(echo "$DIRS_IN_FLIGHT" | awk -v i="$I" '{print $i}')
     MODULE_START_EPOCH=$(echo "$STARTS_IN_FLIGHT" | awk -v i="$I" '{print $i}')
     LOG_FILE="$LOG_DIR/$(echo "$DIR" | tr '/' '_').log"
-    MODULE_ELAPSED=$(( $(now_epoch) - MODULE_START_EPOCH ))
 
     if wait "$PID"; then
+      MODULE_ELAPSED=$(( $(now_epoch) - MODULE_START_EPOCH ))
       printf "${GREEN}✔ %-40s [ PASS ] elapsed %ss${NC}\n" "$DIR" "$MODULE_ELAPSED"
     else
+      MODULE_ELAPSED=$(( $(now_epoch) - MODULE_START_EPOCH ))
       printf "${RED}✘ %-40s [ FAIL ] elapsed %ss${NC}\n" "$DIR" "$MODULE_ELAPSED"
       if [ -f "$LOG_FILE" ]; then
         sed 's/^/    /' "$LOG_FILE"
