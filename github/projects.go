@@ -14,7 +14,7 @@ import (
 // ProjectsService handles communication with the project V2
 // methods of the GitHub API.
 //
-// GitHub API docs: https://docs.github.com/rest/projects/projects?apiVersion=2022-11-28
+// GitHub API docs: https://docs.github.com/rest/projects?apiVersion=2022-11-28
 type ProjectsService service
 
 // ProjectV2ItemContentType represents the type of content in a ProjectV2Item.
