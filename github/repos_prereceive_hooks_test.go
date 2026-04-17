@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -111,16 +110,13 @@ func TestRepositoriesService_UpdatePreReceiveHook(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	input := &PreReceiveHook{}
+	input := &PreReceiveHook{
+		ID: Ptr(int64(1)),
+	}
 
 	mux.HandleFunc("/repos/o/r/pre-receive-hooks/1", func(w http.ResponseWriter, r *http.Request) {
-		var v *PreReceiveHook
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"id":1}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})

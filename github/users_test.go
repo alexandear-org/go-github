@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -257,13 +256,8 @@ func TestUsersService_Edit(t *testing.T) {
 	input := &User{Name: Ptr("n")}
 
 	mux.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
-		var v *User
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})

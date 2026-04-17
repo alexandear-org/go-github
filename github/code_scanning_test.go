@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -64,17 +63,11 @@ func TestCodeScanningService_UploadSarif(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/code-scanning/sarifs", func(w http.ResponseWriter, r *http.Request) {
-		var v *SarifAnalysis
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
 		testMethod(t, r, "POST")
-		want := &SarifAnalysis{CommitSHA: Ptr("abc"), Ref: Ptr("ref/head/main"), Sarif: Ptr("abc"), CheckoutURI: Ptr("uri"), StartedAt: &Timestamp{time.Date(2006, time.January, 2, 15, 4, 5, 0, time.UTC)}, ToolName: Ptr("codeql-cli")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"commit_sha":"abc","ref":"ref/head/main","sarif":"abc","checkout_uri":"uri","started_at":"2006-01-02T15:04:05Z","tool_name":"codeql-cli"}`+"\n")
 
 		w.WriteHeader(http.StatusAccepted)
-		respBody, _ := json.Marshal(expectedSarifID)
-		_, _ = w.Write(respBody)
+		fmt.Fprint(w, `{"id":"testid","url":"https://example.com/testurl"}`)
 	})
 
 	ctx := t.Context()

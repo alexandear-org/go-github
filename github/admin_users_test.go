@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -20,14 +19,8 @@ func TestAdminUsers_Create(t *testing.T) {
 	client, mux, _ := setup(t)
 
 	mux.HandleFunc("/admin/users", func(w http.ResponseWriter, r *http.Request) {
-		var v *CreateUserRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		want := &CreateUserRequest{Login: "github", Email: Ptr("email@example.com"), Suspended: Ptr(false)}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"login":"github","email":"email@example.com","suspended":false}`+"\n")
 
 		fmt.Fprint(w, `{"login":"github","id":1}`)
 	})

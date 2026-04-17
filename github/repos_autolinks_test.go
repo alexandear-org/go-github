@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -63,12 +62,9 @@ func TestRepositoriesService_AddAutolink(t *testing.T) {
 		IsAlphanumeric: Ptr(true),
 	}
 	mux.HandleFunc("/repos/o/r/autolinks", func(w http.ResponseWriter, r *http.Request) {
-		var v *AutolinkOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, opt) {
-			t.Errorf("Request body = %+v, want %+v", v, opt)
-		}
+		testBody(t, r, `{"key_prefix":"TICKET-","url_template":"https://example.com/TICKET?query=<num>","is_alphanumeric":true}`+"\n")
+
 		w.WriteHeader(http.StatusOK)
 		assertWrite(t, w, []byte(`
 			{

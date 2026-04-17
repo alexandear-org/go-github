@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -23,14 +22,8 @@ func TestAdminOrgs_Create(t *testing.T) {
 	}
 
 	mux.HandleFunc("/admin/organizations", func(w http.ResponseWriter, r *http.Request) {
-		var v *createOrgRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		want := &createOrgRequest{Login: Ptr("github"), Admin: Ptr("ghAdmin")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"login":"github","admin":"ghAdmin"}`+"\n")
 
 		fmt.Fprint(w, `{"login":"github","id":1}`)
 	})
@@ -65,14 +58,8 @@ func TestAdminOrgs_Rename(t *testing.T) {
 	}
 
 	mux.HandleFunc("/admin/organizations/o", func(w http.ResponseWriter, r *http.Request) {
-		var v *renameOrgRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		want := &renameOrgRequest{Login: Ptr("the-new-octocats")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"login":"the-new-octocats"}`+"\n")
 
 		fmt.Fprint(w, `{"message":"Job queued to rename organization. It may take a few minutes to complete.","url":"https://<hostname>/api/v3/organizations/1"}`)
 	})
@@ -112,14 +99,8 @@ func TestAdminOrgs_RenameByName(t *testing.T) {
 	client, mux, _ := setup(t)
 
 	mux.HandleFunc("/admin/organizations/o", func(w http.ResponseWriter, r *http.Request) {
-		var v *renameOrgRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		want := &renameOrgRequest{Login: Ptr("the-new-octocats")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"login":"the-new-octocats"}`+"\n")
 
 		fmt.Fprint(w, `{"message":"Job queued to rename organization. It may take a few minutes to complete.","url":"https://<hostname>/api/v3/organizations/1"}`)
 	})

@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -111,13 +110,8 @@ func TestIssuesService_CreateLabel(t *testing.T) {
 	input := &Label{Name: Ptr("n")}
 
 	mux.HandleFunc("/repos/o/r/labels", func(w http.ResponseWriter, r *http.Request) {
-		var v *Label
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n"}`+"\n")
 
 		fmt.Fprint(w, `{"url":"u"}`)
 	})
@@ -164,13 +158,8 @@ func TestIssuesService_EditLabel(t *testing.T) {
 	input := &Label{Name: Ptr("z")}
 
 	mux.HandleFunc("/repos/o/r/labels/n", func(w http.ResponseWriter, r *http.Request) {
-		var v *Label
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"z"}`+"\n")
 
 		fmt.Fprint(w, `{"url":"u"}`)
 	})
@@ -300,13 +289,8 @@ func TestIssuesService_AddLabelsToIssue(t *testing.T) {
 	input := []string{"a", "b"}
 
 	mux.HandleFunc("/repos/o/r/issues/1/labels", func(w http.ResponseWriter, r *http.Request) {
-		var v []string
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `["a","b"]`+"\n")
 
 		fmt.Fprint(w, `[{"url":"u"}]`)
 	})
@@ -387,13 +371,8 @@ func TestIssuesService_ReplaceLabelsForIssue(t *testing.T) {
 	input := []string{"a", "b"}
 
 	mux.HandleFunc("/repos/o/r/issues/1/labels", func(w http.ResponseWriter, r *http.Request) {
-		var v []string
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `["a","b"]`+"\n")
 
 		fmt.Fprint(w, `[{"url":"u"}]`)
 	})

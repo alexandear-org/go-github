@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -70,15 +69,7 @@ func TestRepositoriesService_UpdateRuleset_OmitZero_Nil(t *testing.T) {
 
 	mux.HandleFunc("/repos/o/repo/rulesets/42", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
-
-		var v map[string]any
-		if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-			t.Errorf("could not decode body: %v", err)
-		}
-
-		if _, ok := v["bypass_actors"]; ok {
-			t.Error("Request body contained 'bypass_actors', expected it to be omitted for nil input")
-		}
+		testBody(t, r, `{"name":"ruleset","source":"","enforcement":"active"}`+"\n")
 
 		fmt.Fprint(w, `{
 			"id": 42,

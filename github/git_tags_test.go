@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -61,13 +60,8 @@ func TestGitService_CreateTag(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/git/tags", func(w http.ResponseWriter, r *http.Request) {
-		var v *CreateTag
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(*v, inputTag) {
-			t.Errorf("Request body = %+v, want %+v", *v, inputTag)
-		}
+		testBody(t, r, `{"tag":"t","message":"test message","object":"s","type":"commit"}`+"\n")
 
 		fmt.Fprint(w, `{"tag": "t"}`)
 	})

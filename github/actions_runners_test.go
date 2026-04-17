@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -63,13 +62,8 @@ func TestActionsService_GenerateOrgJITConfig(t *testing.T) {
 	input := &GenerateJITConfigRequest{Name: "test", RunnerGroupID: 1, Labels: []string{"one", "two"}}
 
 	mux.HandleFunc("/orgs/o/actions/runners/generate-jitconfig", func(w http.ResponseWriter, r *http.Request) {
-		var v *GenerateJITConfigRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"test","runner_group_id":1,"labels":["one","two"]}`+"\n")
 
 		fmt.Fprint(w, `{"encoded_jit_config":"foo"}`)
 	})
@@ -107,13 +101,8 @@ func TestActionsService_GenerateRepoJITConfig(t *testing.T) {
 	input := &GenerateJITConfigRequest{Name: "test", RunnerGroupID: 1, Labels: []string{"one", "two"}}
 
 	mux.HandleFunc("/repos/o/r/actions/runners/generate-jitconfig", func(w http.ResponseWriter, r *http.Request) {
-		var v *GenerateJITConfigRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"test","runner_group_id":1,"labels":["one","two"]}`+"\n")
 
 		fmt.Fprint(w, `{"encoded_jit_config":"foo"}`)
 	})

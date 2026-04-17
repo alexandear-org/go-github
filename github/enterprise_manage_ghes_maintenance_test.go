@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -95,13 +94,8 @@ func TestEnterpriseService_CreateMaintenance(t *testing.T) {
 	}
 
 	mux.HandleFunc("/manage/v1/maintenance", func(w http.ResponseWriter, r *http.Request) {
-		var v *MaintenanceOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"enabled":true,"uuid":"1234-1234","when":"now","ip_exception_list":["1.1.1.1"],"maintenance_mode_message":"Scheduled maintenance for upgrading."}`+"\n")
 
 		fmt.Fprint(w, `[ { "hostname": "primary", "uuid": "1b6cf518-f97c-11ed-8544-061d81f7eedb", "message": "Scheduled maintenance for upgrading." } ]`)
 	})

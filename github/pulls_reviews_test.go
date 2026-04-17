@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -366,13 +365,8 @@ func TestPullRequestsService_CreateReview(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pulls/1/reviews", func(w http.ResponseWriter, r *http.Request) {
-		var v *PullRequestReviewRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"commit_id":"commit_id","body":"b","event":"APPROVE"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -470,13 +464,8 @@ func TestPullRequestsService_CreateReview_addHeader(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pulls/1/reviews", func(w http.ResponseWriter, r *http.Request) {
-		var v *PullRequestReviewRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"comments":[{"path":"path/to/file.go","body":"this is a comment body","side":"RIGHT","line":11},{"path":"path/to/file.go","body":"this is a comment body","side":"LEFT","line":22},{"path":"path/to/file.go","body":"this is a comment body","side":"RIGHT","line":33}]}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -534,13 +523,8 @@ func TestPullRequestsService_SubmitReview(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pulls/1/reviews/1/events", func(w http.ResponseWriter, r *http.Request) {
-		var v *PullRequestReviewRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"body":"b","event":"APPROVE"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -587,13 +571,8 @@ func TestPullRequestsService_DismissReview(t *testing.T) {
 	input := &PullRequestReviewDismissalRequest{Message: Ptr("m")}
 
 	mux.HandleFunc("/repos/o/r/pulls/1/reviews/1/dismissals", func(w http.ResponseWriter, r *http.Request) {
-		var v *PullRequestReviewDismissalRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"message":"m"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})

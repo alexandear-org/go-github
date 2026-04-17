@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -25,13 +24,8 @@ func TestRepositoriesService_Merge(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/merges", func(w http.ResponseWriter, r *http.Request) {
-		var v *RepositoryMergeRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"base":"b","head":"h","commit_message":"c"}`+"\n")
 
 		fmt.Fprint(w, `{"sha":"s"}`)
 	})
@@ -90,13 +84,8 @@ func TestRepositoriesService_MergeUpstream(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/merge-upstream", func(w http.ResponseWriter, r *http.Request) {
-		var v *RepoMergeUpstreamRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"branch":"b"}`+"\n")
 
 		fmt.Fprint(w, `{"merge_type":"m"}`)
 	})

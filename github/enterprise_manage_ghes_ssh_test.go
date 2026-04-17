@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -54,18 +53,9 @@ func TestEnterpriseService_DeleteSSHKey(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	input := &SSHKeyOptions{
-		Key: "ssh-rsa 1234",
-	}
-
 	mux.HandleFunc("/manage/v1/access/ssh", func(w http.ResponseWriter, r *http.Request) {
-		var v *SSHKeyOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "DELETE")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"key":"ssh-rsa 1234"}`+"\n")
 
 		fmt.Fprint(w, `[ { "hostname": "primary", "uuid": "1b6cf518-f97c-11ed-8544-061d81f7eedb", "message": "SSH key removed successfully" } ]`)
 	})
@@ -95,18 +85,9 @@ func TestEnterpriseService_CreateSSHKey(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	input := &SSHKeyOptions{
-		Key: "ssh-rsa 1234",
-	}
-
 	mux.HandleFunc("/manage/v1/access/ssh", func(w http.ResponseWriter, r *http.Request) {
-		var v *SSHKeyOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"key":"ssh-rsa 1234"}`+"\n")
 
 		fmt.Fprint(w, `[ { "hostname": "primary", "uuid": "1b6cf518-f97c-11ed-8544-061d81f7eedb", "message": "SSH key added successfully", "modified": true } ]`)
 	})

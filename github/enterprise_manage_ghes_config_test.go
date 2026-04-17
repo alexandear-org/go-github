@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -597,19 +596,9 @@ func TestEnterpriseService_InitialConfig(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	input := &InitialConfigOptions{
-		License:  "1234-1234",
-		Password: "password",
-	}
-
 	mux.HandleFunc("/manage/v1/config/init", func(_ http.ResponseWriter, r *http.Request) {
-		var v *InitialConfigOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if diff := cmp.Diff(v, input); diff != "" {
-			t.Errorf("diff mismatch (-want +got):\n%v", diff)
-		}
+		testBody(t, r, `{"license":"1234-1234","password":"password"}`+"\n")
 	})
 
 	ctx := t.Context()
@@ -629,15 +618,8 @@ func TestEnterpriseService_ConfigApply(t *testing.T) {
 
 	mux.HandleFunc("/manage/v1/config/apply", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
-		var got *ConfigApplyOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&got))
+		testBody(t, r, `{"run_id":"1234"}`+"\n")
 
-		want := &ConfigApplyOptions{
-			RunID: Ptr("1234"),
-		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("diff mismatch (-want +got):\n%v", diff)
-		}
 		fmt.Fprint(w, `{ "run_id": "1234" }`)
 	})
 
@@ -673,15 +655,8 @@ func TestEnterpriseService_ConfigApplyStatus(t *testing.T) {
 
 	mux.HandleFunc("/manage/v1/config/apply", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		var got *ConfigApplyOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&got))
+		testBody(t, r, `{"run_id":"1234"}`+"\n")
 
-		want := &ConfigApplyOptions{
-			RunID: Ptr("1234"),
-		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("diff mismatch (-want +got):\n%v", diff)
-		}
 		fmt.Fprint(w, `{
 			"running": true,
 			"successful": false,

@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -37,13 +36,9 @@ func TestIssueImportService_Create(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/import/issues", func(w http.ResponseWriter, r *http.Request) {
-		var v *IssueImportRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", mediaTypeIssueImportAPI)
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"issue":{"title":"Dummy Issue","body":"Dummy description","created_at":"2020-08-11T15:30:00Z","assignee":"developer","milestone":1,"labels":["l1","l2"]},"comments":[{"created_at":"2020-08-11T15:30:00Z","body":"Comment body"}]}`+"\n")
 
 		assertWrite(t, w, issueImportResponseJSON)
 	})
@@ -95,13 +90,9 @@ func TestIssueImportService_Create_deferred(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/import/issues", func(w http.ResponseWriter, r *http.Request) {
-		var v *IssueImportRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", mediaTypeIssueImportAPI)
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"issue":{"title":"Dummy Issue","body":"Dummy description","created_at":"2020-08-11T15:30:00Z","assignee":"developer","milestone":1,"labels":["l1","l2"]},"comments":[{"created_at":"2020-08-11T15:30:00Z","body":"Comment body"}]}`+"\n")
 
 		w.WriteHeader(http.StatusAccepted)
 		assertWrite(t, w, issueImportResponseJSON)
@@ -141,13 +132,9 @@ func TestIssueImportService_Create_badResponse(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/import/issues", func(w http.ResponseWriter, r *http.Request) {
-		var v *IssueImportRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", mediaTypeIssueImportAPI)
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"issue":{"title":"Dummy Issue","body":"Dummy description","created_at":"2020-08-11T15:30:00Z","assignee":"developer","milestone":1,"labels":["l1","l2"]},"comments":[{"created_at":"2020-08-11T15:30:00Z","body":"Comment body"}]}`+"\n")
 
 		w.WriteHeader(http.StatusAccepted)
 		assertWrite(t, w, []byte("{[}"))

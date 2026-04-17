@@ -6,10 +6,7 @@
 package github
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"testing"
 
@@ -192,13 +189,8 @@ func TestTeamsService_CreateTeam(t *testing.T) {
 	input := NewTeam{Name: "n", Privacy: Ptr("closed"), RepoNames: []string{"r"}}
 
 	mux.HandleFunc("/orgs/o/teams", func(w http.ResponseWriter, r *http.Request) {
-		var v *NewTeam
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, &input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n","repo_names":["r"],"privacy":"closed"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -245,13 +237,8 @@ func TestTeamsService_EditTeamByID(t *testing.T) {
 	input := NewTeam{Name: "n", Privacy: Ptr("closed")}
 
 	mux.HandleFunc("/organizations/1/team/1", func(w http.ResponseWriter, r *http.Request) {
-		var v *NewTeam
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, &input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n","privacy":"closed"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -287,21 +274,10 @@ func TestTeamsService_EditTeamByID_RemoveParent(t *testing.T) {
 	client, mux, _ := setup(t)
 
 	input := NewTeam{Name: "n", NotificationSetting: Ptr("notifications_enabled"), Privacy: Ptr("closed")}
-	var body string
 
 	mux.HandleFunc("/organizations/1/team/1", func(w http.ResponseWriter, r *http.Request) {
-		buf, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Unable to read body: %v", err)
-		}
-		body = string(buf)
-		var v *NewTeam
-		assertNilError(t, json.NewDecoder(bytes.NewBuffer(buf)).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, &input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n","parent_team_id":null,"notification_setting":"notifications_enabled","privacy":"closed"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -316,10 +292,6 @@ func TestTeamsService_EditTeamByID_RemoveParent(t *testing.T) {
 	if !cmp.Equal(team, want) {
 		t.Errorf("Teams.EditTeamByID returned %+v, want %+v", team, want)
 	}
-
-	if want := `{"name":"n","parent_team_id":null,"notification_setting":"notifications_enabled","privacy":"closed"}` + "\n"; body != want {
-		t.Errorf("Teams.EditTeamByID body = %+v, want %+v", body, want)
-	}
 }
 
 func TestTeamsService_EditTeamBySlug(t *testing.T) {
@@ -329,13 +301,8 @@ func TestTeamsService_EditTeamBySlug(t *testing.T) {
 	input := NewTeam{Name: "n", Privacy: Ptr("closed")}
 
 	mux.HandleFunc("/orgs/o/teams/s", func(w http.ResponseWriter, r *http.Request) {
-		var v *NewTeam
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, &input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n","privacy":"closed"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -371,21 +338,10 @@ func TestTeamsService_EditTeamBySlug_RemoveParent(t *testing.T) {
 	client, mux, _ := setup(t)
 
 	input := NewTeam{Name: "n", NotificationSetting: Ptr("notifications_disabled"), Privacy: Ptr("closed")}
-	var body string
 
 	mux.HandleFunc("/orgs/o/teams/s", func(w http.ResponseWriter, r *http.Request) {
-		buf, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("Unable to read body: %v", err)
-		}
-		body = string(buf)
-		var v *NewTeam
-		assertNilError(t, json.NewDecoder(bytes.NewBuffer(buf)).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, &input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n","parent_team_id":null,"notification_setting":"notifications_disabled","privacy":"closed"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -399,10 +355,6 @@ func TestTeamsService_EditTeamBySlug_RemoveParent(t *testing.T) {
 	want := &Team{ID: Ptr(int64(1))}
 	if !cmp.Equal(team, want) {
 		t.Errorf("Teams.EditTeam returned %+v, want %+v", team, want)
-	}
-
-	if want := `{"name":"n","parent_team_id":null,"notification_setting":"notifications_disabled","privacy":"closed"}` + "\n"; body != want {
-		t.Errorf("Teams.EditTeam body = %+v, want %+v", body, want)
 	}
 }
 
@@ -791,13 +743,8 @@ func TestTeamsService_AddTeamRepoByID(t *testing.T) {
 	opt := &TeamAddTeamRepoOptions{Permission: "admin"}
 
 	mux.HandleFunc("/organizations/1/team/1/repos/owner/repo", func(w http.ResponseWriter, r *http.Request) {
-		var v *TeamAddTeamRepoOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		if !cmp.Equal(v, opt) {
-			t.Errorf("Request body = %+v, want %+v", v, opt)
-		}
+		testBody(t, r, `{"permission":"admin"}`+"\n")
 
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -826,13 +773,8 @@ func TestTeamsService_AddTeamRepoBySlug(t *testing.T) {
 	opt := &TeamAddTeamRepoOptions{Permission: "admin"}
 
 	mux.HandleFunc("/orgs/org/teams/slug/repos/owner/repo", func(w http.ResponseWriter, r *http.Request) {
-		var v *TeamAddTeamRepoOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		if !cmp.Equal(v, opt) {
-			t.Errorf("Request body = %+v, want %+v", v, opt)
-		}
+		testBody(t, r, `{"permission":"admin"}`+"\n")
 
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -1161,12 +1103,7 @@ func TestTeamsService_AddTeamProjectByID(t *testing.T) {
 	mux.HandleFunc("/organizations/1/team/1/projects/1", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 		testHeader(t, r, "Accept", mediaTypeProjectsPreview)
-
-		var v *TeamProjectOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-		if !cmp.Equal(v, opt) {
-			t.Errorf("Request body = %+v, want %+v", v, opt)
-		}
+		testBody(t, r, `{"permission":"admin"}`+"\n")
 
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -1199,12 +1136,7 @@ func TestTeamsService_AddTeamProjectBySlug(t *testing.T) {
 	mux.HandleFunc("/orgs/o/teams/s/projects/1", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 		testHeader(t, r, "Accept", mediaTypeProjectsPreview)
-
-		var v *TeamProjectOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-		if !cmp.Equal(v, opt) {
-			t.Errorf("Request body = %+v, want %+v", v, opt)
-		}
+		testBody(t, r, `{"permission":"admin"}`+"\n")
 
 		w.WriteHeader(http.StatusNoContent)
 	})

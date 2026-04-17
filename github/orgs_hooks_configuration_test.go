@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -67,16 +66,13 @@ func TestOrganizationsService_EditHookConfiguration(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	input := &HookConfig{}
+	input := &HookConfig{
+		ContentType: Ptr("json"),
+	}
 
 	mux.HandleFunc("/orgs/o/hooks/1/config", func(w http.ResponseWriter, r *http.Request) {
-		var v *HookConfig
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"content_type":"json"}`+"\n")
 
 		fmt.Fprint(w, `{"content_type": "json", "insecure_ssl": "0", "secret": "********", "url": "https://example.com/webhook"}`)
 	})

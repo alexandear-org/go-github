@@ -6,9 +6,7 @@
 package github
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 	"testing"
 
@@ -106,17 +104,9 @@ func TestGitService_CreateTree(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/git/trees", func(w http.ResponseWriter, r *http.Request) {
-		got, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatalf("unable to read body: %v", err)
-		}
-
 		testMethod(t, r, "POST")
-
-		want := []byte(`{"base_tree":"b","tree":[{"sha":"7c258a9869f33c1e1e1f74fbb32f07c86cb5a75b","path":"file.rb","mode":"100644","type":"blob"}]}` + "\n")
-		if !bytes.Equal(got, want) {
-			t.Errorf("Git.CreateTree request body: %v, want %v", got, want)
-		}
+		want := `{"base_tree":"b","tree":[{"sha":"7c258a9869f33c1e1e1f74fbb32f07c86cb5a75b","path":"file.rb","mode":"100644","type":"blob"}]}` + "\n"
+		testBody(t, r, want)
 
 		fmt.Fprint(w, `{
 		  "sha": "cd8274d15fa3ae2ab983129fb037999f264ba9a7",
@@ -184,17 +174,10 @@ func TestGitService_CreateTree_Content(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/git/trees", func(w http.ResponseWriter, r *http.Request) {
-		got, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatalf("unable to read body: %v", err)
-		}
-
 		testMethod(t, r, "POST")
 
-		want := []byte(`{"base_tree":"b","tree":[{"path":"content.md","mode":"100644","content":"file content"}]}` + "\n")
-		if !bytes.Equal(got, want) {
-			t.Errorf("Git.CreateTree request body: %v, want %v", got, want)
-		}
+		want := `{"base_tree":"b","tree":[{"path":"content.md","mode":"100644","content":"file content"}]}` + "\n"
+		testBody(t, r, want)
 
 		fmt.Fprint(w, `{
 		  "sha": "5c6780ad2c68743383b740fd1dab6f6a33202b11",
@@ -264,17 +247,10 @@ func TestGitService_CreateTree_Delete(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/git/trees", func(w http.ResponseWriter, r *http.Request) {
-		got, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatalf("unable to read body: %v", err)
-		}
-
 		testMethod(t, r, "POST")
 
-		want := []byte(`{"base_tree":"b","tree":[{"sha":null,"path":"content.md","mode":"100644"}]}` + "\n")
-		if !bytes.Equal(got, want) {
-			t.Errorf("Git.CreateTree request body: %v, want %v", got, want)
-		}
+		want := `{"base_tree":"b","tree":[{"sha":null,"path":"content.md","mode":"100644"}]}` + "\n"
+		testBody(t, r, want)
 
 		fmt.Fprint(w, `{
 		  "sha": "5c6780ad2c68743383b740fd1dab6f6a33202b11",

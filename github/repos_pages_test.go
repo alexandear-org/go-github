@@ -6,10 +6,7 @@
 package github
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"testing"
 
@@ -30,15 +27,9 @@ func TestRepositoriesService_EnablePagesLegacy(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pages", func(w http.ResponseWriter, r *http.Request) {
-		var v *createPagesRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", mediaTypeEnablePagesAPIPreview)
-		want := &createPagesRequest{BuildType: Ptr("legacy"), Source: &PagesSource{Branch: Ptr("master"), Path: Ptr("/")}}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"build_type":"legacy","source":{"branch":"master","path":"/"}}`+"\n")
 
 		fmt.Fprint(w, `{"url":"u","status":"s","cname":"c","custom_404":false,"html_url":"h","build_type": "legacy","source": {"branch":"master", "path":"/"}}`)
 	})
@@ -84,15 +75,9 @@ func TestRepositoriesService_EnablePagesWorkflow(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pages", func(w http.ResponseWriter, r *http.Request) {
-		var v *createPagesRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", mediaTypeEnablePagesAPIPreview)
-		want := &createPagesRequest{BuildType: Ptr("workflow")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"build_type":"workflow"}`+"\n")
 
 		fmt.Fprint(w, `{"url":"u","status":"s","cname":"c","custom_404":false,"html_url":"h","build_type": "workflow"}`)
 	})
@@ -135,14 +120,8 @@ func TestRepositoriesService_UpdatePagesLegacy(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pages", func(w http.ResponseWriter, r *http.Request) {
-		var v *PagesUpdate
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		want := &PagesUpdate{CNAME: Ptr("www.example.com"), BuildType: Ptr("legacy"), Source: &PagesSource{Branch: Ptr("gh-pages")}}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"cname":"www.example.com","build_type":"legacy","source":{"branch":"gh-pages"}}`+"\n")
 
 		fmt.Fprint(w, `{"cname":"www.example.com","build_type":"legacy","source":{"branch":"gh-pages"}}`)
 	})
@@ -174,14 +153,8 @@ func TestRepositoriesService_UpdatePagesWorkflow(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pages", func(w http.ResponseWriter, r *http.Request) {
-		var v *PagesUpdate
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		want := &PagesUpdate{CNAME: Ptr("www.example.com"), BuildType: Ptr("workflow")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"cname":"www.example.com","build_type":"workflow"}`+"\n")
 
 		fmt.Fprint(w, `{"cname":"www.example.com","build_type":"workflow"}`)
 	})
@@ -212,14 +185,8 @@ func TestRepositoriesService_UpdatePagesGHES(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pages", func(w http.ResponseWriter, r *http.Request) {
-		var v *PagesUpdate
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		want := &PagesUpdate{BuildType: Ptr("workflow")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"build_type":"workflow"}`+"\n")
 
 		fmt.Fprint(w, `{"build_type":"workflow"}`)
 	})
@@ -250,15 +217,8 @@ func TestRepositoriesService_UpdatePages_NullCNAME(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/pages", func(w http.ResponseWriter, r *http.Request) {
-		got, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Fatalf("unable to read body: %v", err)
-		}
-
-		want := []byte(`{"cname":null,"source":{"branch":"gh-pages"}}` + "\n")
-		if !bytes.Equal(got, want) {
-			t.Errorf("Request body = %+v, want %+v", got, want)
-		}
+		want := `{"cname":null,"source":{"branch":"gh-pages"}}` + "\n"
+		testBody(t, r, want)
 
 		fmt.Fprint(w, `{"cname":null,"source":{"branch":"gh-pages"}}`)
 	})

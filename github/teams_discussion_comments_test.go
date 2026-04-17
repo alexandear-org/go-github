@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -245,13 +244,8 @@ func TestTeamsService_CreateComment(t *testing.T) {
 	input := DiscussionComment{Body: Ptr("c")}
 
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		var v *DiscussionComment
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, &input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"body":"c"}`+"\n")
 
 		fmt.Fprint(w, `{"number":4}`)
 	}
@@ -317,13 +311,8 @@ func TestTeamsService_EditComment(t *testing.T) {
 
 	input := DiscussionComment{Body: Ptr("e")}
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		var v *DiscussionComment
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, &input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"body":"e"}`+"\n")
 
 		fmt.Fprint(w, `{"number":4}`)
 	}

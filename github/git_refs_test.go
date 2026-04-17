@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -339,19 +338,10 @@ func TestGitService_CreateRef(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	args := CreateRef{
-		Ref: "refs/heads/b",
-		SHA: "aa218f56b14c9653891f9e74264a383fa43fefbd",
-	}
-
 	mux.HandleFunc("/repos/o/r/git/refs", func(w http.ResponseWriter, r *http.Request) {
-		var v *CreateRef
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(*v, args) {
-			t.Errorf("Request body = %+v, want %+v", *v, args)
-		}
+		testBody(t, r, `{"ref":"refs/heads/b","sha":"aa218f56b14c9653891f9e74264a383fa43fefbd"}`+"\n")
+
 		fmt.Fprint(w, `
 		  {
 		    "ref": "refs/heads/b",
@@ -424,19 +414,10 @@ func TestGitService_UpdateRef(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	args := UpdateRef{
-		SHA:   "aa218f56b14c9653891f9e74264a383fa43fefbd",
-		Force: Ptr(true),
-	}
-
 	mux.HandleFunc("/repos/o/r/git/refs/heads/b", func(w http.ResponseWriter, r *http.Request) {
-		var v *UpdateRef
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(*v, args) {
-			t.Errorf("Request body = %+v, want %+v", *v, args)
-		}
+		testBody(t, r, `{"sha":"aa218f56b14c9653891f9e74264a383fa43fefbd","force":true}`+"\n")
+
 		fmt.Fprint(w, `
 		  {
 		    "ref": "refs/heads/b",
@@ -585,19 +566,10 @@ func TestGitService_UpdateRef_pathEscape(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	args := UpdateRef{
-		SHA:   "aa218f56b14c9653891f9e74264a383fa43fefbd",
-		Force: Ptr(true),
-	}
-
 	mux.HandleFunc("/repos/o/r/git/refs/heads/b#1", func(w http.ResponseWriter, r *http.Request) {
-		var v *UpdateRef
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(*v, args) {
-			t.Errorf("Request body = %+v, want %+v", *v, args)
-		}
+		testBody(t, r, `{"sha":"aa218f56b14c9653891f9e74264a383fa43fefbd","force":true}`+"\n")
+
 		fmt.Fprint(w, `
 		  {
 		    "ref": "refs/heads/b#1",

@@ -7,7 +7,6 @@ package github
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -224,18 +223,9 @@ func TestRepositoriesService_CreateRelease(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/releases", func(w http.ResponseWriter, r *http.Request) {
-		var v *repositoryReleaseRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		want := &repositoryReleaseRequest{
-			Name:                   Ptr("v1.0"),
-			DiscussionCategoryName: Ptr("General"),
-			GenerateReleaseNotes:   Ptr(true),
-		}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"name":"v1.0","generate_release_notes":true,"discussion_category_name":"General"}`+"\n")
+
 		fmt.Fprint(w, `{"id":1}`)
 	})
 
@@ -294,17 +284,9 @@ func TestRepositoriesService_EditRelease(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/releases/1", func(w http.ResponseWriter, r *http.Request) {
-		var v *repositoryReleaseRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		want := &repositoryReleaseRequest{
-			Name:                   Ptr("n"),
-			DiscussionCategoryName: Ptr("General"),
-		}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"name":"n","discussion_category_name":"General"}`+"\n")
+
 		fmt.Fprint(w, `{"id":1}`)
 	})
 
@@ -626,13 +608,9 @@ func TestRepositoriesService_EditReleaseAsset(t *testing.T) {
 	input := &ReleaseAsset{Name: Ptr("n")}
 
 	mux.HandleFunc("/repos/o/r/releases/assets/1", func(w http.ResponseWriter, r *http.Request) {
-		var v *ReleaseAsset
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"n"}`+"\n")
+
 		fmt.Fprint(w, `{"id":1}`)
 	})
 

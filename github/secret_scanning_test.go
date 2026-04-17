@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -354,15 +353,7 @@ func TestSecretScanningService_UpdateAlert(t *testing.T) {
 
 	mux.HandleFunc("/repos/o/r/secret-scanning/alerts/1", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PATCH")
-
-		var v *SecretScanningAlertUpdateOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
-		want := &SecretScanningAlertUpdateOptions{State: "resolved", Resolution: Ptr("used_in_tests")}
-
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"state":"resolved","resolution":"used_in_tests"}`+"\n")
 
 		fmt.Fprint(w, `{
 			"number": 1,
@@ -626,12 +617,7 @@ func TestSecretScanningService_CreatePushProtectionBypass(t *testing.T) {
 
 	mux.HandleFunc(fmt.Sprintf("/repos/%v/%v/secret-scanning/push-protection-bypasses", owner, repo), func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
-		var v *PushProtectionBypassRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-		want := &PushProtectionBypassRequest{Reason: "valid reason", PlaceholderID: "bypass-123"}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"reason":"valid reason","placeholder_id":"bypass-123"}`+"\n")
 
 		fmt.Fprint(w, `{
 			"reason": "valid reason",

@@ -7,7 +7,6 @@ package github
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -100,13 +99,8 @@ func TestPrivateRegistriesService_CreateOrganizationPrivateRegistry(t *testing.T
 	}
 
 	mux.HandleFunc("/orgs/o/private-registries", func(w http.ResponseWriter, r *http.Request) {
-		var v *CreateOrganizationPrivateRegistry
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"registry_type":"maven_repository","url":"https://maven.pkg.github.com/OWNER/REPOSITORY","username":"monalisa","encrypted_value":"encrypted_value","key_id":"key_id","visibility":"selected","selected_repository_ids":[1,2,3]}`+"\n")
 
 		fmt.Fprint(w, `{
   "name": "MAVEN_REPOSITORY_SECRET",
@@ -250,13 +244,8 @@ func TestPrivateRegistries_UpdateOrganizationPrivateRegistry(t *testing.T) {
 	}
 
 	mux.HandleFunc("/orgs/o/private-registries/MAVEN_REPOSITORY_SECRET", func(w http.ResponseWriter, r *http.Request) {
-		var v *UpdateOrganizationPrivateRegistry
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"username":"monalisa","encrypted_value":"encrypted_value","key_id":"key_id","visibility":"selected"}`+"\n")
 
 		fmt.Fprint(w, `{
   "name": "MAVEN_REPOSITORY_SECRET",

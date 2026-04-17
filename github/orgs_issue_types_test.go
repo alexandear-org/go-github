@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -97,13 +96,8 @@ func TestOrganizationsService_CreateIssueType(t *testing.T) {
 	}
 
 	mux.HandleFunc("/orgs/o/issue-types", func(w http.ResponseWriter, r *http.Request) {
-		var v *CreateOrUpdateIssueTypesOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"Epic","is_enabled":true,"is_private":true,"description":"An issue type for a multi-week tracking of work","color":"green"}`+"\n")
 
 		fmt.Fprint(w, `{
 				"id": 410,
@@ -161,13 +155,8 @@ func TestOrganizationsService_UpdateIssueType(t *testing.T) {
 	}
 
 	mux.HandleFunc("/orgs/o/issue-types/410", func(w http.ResponseWriter, r *http.Request) {
-		var v *CreateOrUpdateIssueTypesOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PUT")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"name":"Epic","is_enabled":true,"is_private":true,"description":"An issue type for a multi-week tracking of work","color":"green"}`+"\n")
 
 		fmt.Fprint(w, `{
 				"id": 410,

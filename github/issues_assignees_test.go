@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -172,16 +171,9 @@ func TestIssuesService_AddAssignees(t *testing.T) {
 	client, mux, _ := setup(t)
 
 	mux.HandleFunc("/repos/o/r/issues/1/assignees", func(w http.ResponseWriter, r *http.Request) {
-		var assignees struct {
-			Assignees []string `json:"assignees,omitempty"`
-		}
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&assignees))
-
 		testMethod(t, r, "POST")
-		want := []string{"user1", "user2"}
-		if !cmp.Equal(assignees.Assignees, want) {
-			t.Errorf("assignees = %+v, want %+v", assignees, want)
-		}
+		testBody(t, r, `{"assignees":["user1","user2"]}`+"\n")
+
 		fmt.Fprint(w, `{"number":1,"assignees":[{"login":"user1"},{"login":"user2"}]}`)
 	})
 
@@ -216,16 +208,9 @@ func TestIssuesService_RemoveAssignees(t *testing.T) {
 	client, mux, _ := setup(t)
 
 	mux.HandleFunc("/repos/o/r/issues/1/assignees", func(w http.ResponseWriter, r *http.Request) {
-		var assignees struct {
-			Assignees []string `json:"assignees,omitempty"`
-		}
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&assignees))
-
 		testMethod(t, r, "DELETE")
-		want := []string{"user1", "user2"}
-		if !cmp.Equal(assignees.Assignees, want) {
-			t.Errorf("assignees = %+v, want %+v", assignees, want)
-		}
+		testBody(t, r, `{"assignees":["user1","user2"]}`+"\n")
+
 		fmt.Fprint(w, `{"number":1,"assignees":[]}`)
 	})
 

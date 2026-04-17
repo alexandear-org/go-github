@@ -229,15 +229,9 @@ func TestRepositoriesService_Create_user(t *testing.T) {
 
 	wantAcceptHeaders := []string{mediaTypeRepositoryTemplatePreview, mediaTypeRepositoryVisibilityPreview}
 	mux.HandleFunc("/user/repos", func(w http.ResponseWriter, r *http.Request) {
-		var v *createRepoRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		want := &createRepoRequest{Name: Ptr("n")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"name":"n"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -283,15 +277,9 @@ func TestRepositoriesService_Create_org(t *testing.T) {
 
 	wantAcceptHeaders := []string{mediaTypeRepositoryTemplatePreview, mediaTypeRepositoryVisibilityPreview}
 	mux.HandleFunc("/orgs/o/repos", func(w http.ResponseWriter, r *http.Request) {
-		var v *createRepoRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		want := &createRepoRequest{Name: Ptr("n")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"name":"n"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -323,22 +311,9 @@ func TestRepositoriesService_Create_withCustomProperties(t *testing.T) {
 
 	wantAcceptHeaders := []string{mediaTypeRepositoryTemplatePreview, mediaTypeRepositoryVisibilityPreview}
 	mux.HandleFunc("/orgs/o/repos", func(w http.ResponseWriter, r *http.Request) {
-		var v *createRepoRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		want := &createRepoRequest{
-			Name: Ptr("n"),
-			CustomProperties: map[string]any{
-				"environment": "production",
-				"team":        "backend",
-				"priority":    float64(1), // JSON unmarshals numbers as float64
-			},
-		}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"name":"n","custom_properties":{"environment":"production","priority":1,"team":"backend"}}`+"\n")
 
 		fmt.Fprint(w, `{"id":1}`)
 	})
@@ -364,15 +339,9 @@ func TestRepositoriesService_CreateFromTemplate(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/to/tr/generate", func(w http.ResponseWriter, r *http.Request) {
-		var v *TemplateRepoRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", mediaTypeRepositoryTemplatePreview)
-		want := &TemplateRepoRequest{Name: Ptr("n")}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
+		testBody(t, r, `{"name":"n"}`+"\n")
 
 		fmt.Fprint(w, `{"id":1,"name":"n"}`)
 	})
@@ -528,14 +497,10 @@ func TestRepositoriesService_Edit(t *testing.T) {
 
 	wantAcceptHeaders := []string{mediaTypeRepositoryTemplatePreview, mediaTypeRepositoryVisibilityPreview}
 	mux.HandleFunc("/repos/o/r", func(w http.ResponseWriter, r *http.Request) {
-		var v *Repository
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "PATCH")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"has_issues":true}`+"\n")
+
 		fmt.Fprint(w, `{"id":1}`)
 	})
 
@@ -1148,14 +1113,8 @@ func TestRepositoriesService_RenameBranch(t *testing.T) {
 			renameBranchReq := "nn"
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *renameBranchRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "POST")
-				want := &renameBranchRequest{NewName: renameBranchReq}
-				if !cmp.Equal(v, want) {
-					t.Errorf("Request body = %+v, want %+v", v, want)
-				}
+				testBody(t, r, `{"new_name":"nn"}`+"\n")
 
 				fmt.Fprint(w, `{"protected":true,"name":"nn"}`)
 			})
@@ -1512,15 +1471,10 @@ func TestRepositoriesService_UpdateBranchProtection_Contexts(t *testing.T) {
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *ProtectionRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PUT")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
-
 				testHeader(t, r, "Accept", mediaTypeRequiredApprovingReviewsPreview)
+				testBody(t, r, `{"required_status_checks":{"strict":true,"contexts":["continuous-integration"]},"required_pull_request_reviews":{"bypass_pull_request_allowances":{"users":["uuu"],"teams":["ttt"],"apps":["aaa"]},"dismissal_restrictions":{"users":["uu"],"teams":["tt"],"apps":["aa"]},"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":0},"enforce_admins":false,"restrictions":{"users":["u"],"teams":["t"],"apps":["a"]},"block_creations":true,"lock_branch":true,"allow_fork_syncing":true}`+"\n")
+
 				fmt.Fprint(w, `{
 					"required_status_checks":{
 						"strict":true,
@@ -1700,15 +1654,10 @@ func TestRepositoriesService_UpdateBranchProtection_EmptyContexts(t *testing.T) 
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *ProtectionRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PUT")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
-
 				testHeader(t, r, "Accept", mediaTypeRequiredApprovingReviewsPreview)
+				testBody(t, r, `{"required_status_checks":{"strict":true,"contexts":[]},"required_pull_request_reviews":{"bypass_pull_request_allowances":{"users":["uuu"],"teams":["ttt"],"apps":["aaa"]},"dismissal_restrictions":{"users":["uu"],"teams":["tt"],"apps":["aa"]},"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":0},"enforce_admins":false,"restrictions":{"users":["u"],"teams":["t"],"apps":["a"]},"block_creations":true,"lock_branch":true,"allow_fork_syncing":true}`+"\n")
+
 				fmt.Fprint(w, `{
 					"required_status_checks":{
 						"strict":true,
@@ -1879,15 +1828,10 @@ func TestRepositoriesService_UpdateBranchProtection_Checks(t *testing.T) {
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *ProtectionRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PUT")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
-
 				testHeader(t, r, "Accept", mediaTypeRequiredApprovingReviewsPreview)
+				testBody(t, r, `{"required_status_checks":{"strict":true,"checks":[{"context":"continuous-integration"}]},"required_pull_request_reviews":{"bypass_pull_request_allowances":{"users":["uuu"],"teams":["ttt"],"apps":["aaa"]},"dismissal_restrictions":{"users":["uu"],"teams":["tt"],"apps":["aa"]},"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":0},"enforce_admins":false,"restrictions":{"users":["u"],"teams":["t"],"apps":["a"]}}`+"\n")
+
 				fmt.Fprint(w, `{
 					"required_status_checks":{
 						"strict":true,
@@ -2032,15 +1976,10 @@ func TestRepositoriesService_UpdateBranchProtection_EmptyChecks(t *testing.T) {
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *ProtectionRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PUT")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
-
 				testHeader(t, r, "Accept", mediaTypeRequiredApprovingReviewsPreview)
+				testBody(t, r, `{"required_status_checks":{"strict":true,"checks":[]},"required_pull_request_reviews":{"bypass_pull_request_allowances":{"users":["uuu"],"teams":["ttt"],"apps":["aaa"]},"dismissal_restrictions":{"users":["uu"],"teams":["tt"],"apps":["aa"]},"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":0},"enforce_admins":false,"restrictions":{"users":["u"],"teams":["t"],"apps":["a"]}}`+"\n")
+
 				fmt.Fprint(w, `{
 					"required_status_checks":{
 						"strict":true,
@@ -2174,15 +2113,10 @@ func TestRepositoriesService_UpdateBranchProtection_StrictNoChecks(t *testing.T)
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *ProtectionRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PUT")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
-
 				testHeader(t, r, "Accept", mediaTypeRequiredApprovingReviewsPreview)
+				testBody(t, r, `{"required_status_checks":{"strict":true},"required_pull_request_reviews":{"bypass_pull_request_allowances":{"users":["uuu"],"teams":["ttt"],"apps":["aaa"]},"dismissal_restrictions":{"users":["uu"],"teams":["tt"],"apps":["aa"]},"dismiss_stale_reviews":true,"require_code_owner_reviews":false,"required_approving_review_count":0},"enforce_admins":false,"restrictions":{"users":["u"],"teams":["t"],"apps":["a"]}}`+"\n")
+
 				fmt.Fprint(w, `{
 					"required_status_checks":{
 						"strict":true,
@@ -2298,13 +2232,8 @@ func TestRepositoriesService_UpdateBranchProtection_RequireLastPushApproval(t *t
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *ProtectionRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PUT")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
+				testBody(t, r, `{"required_status_checks":null,"required_pull_request_reviews":{"dismiss_stale_reviews":false,"require_code_owner_reviews":false,"required_approving_review_count":0,"require_last_push_approval":true},"enforce_admins":false,"restrictions":null}`+"\n")
 
 				fmt.Fprint(w, `{
 					"required_pull_request_reviews":{
@@ -2564,14 +2493,10 @@ func TestRepositoriesService_UpdateRequiredStatusChecks_Contexts(t *testing.T) {
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *RequiredStatusChecksRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PATCH")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
 				testHeader(t, r, "Accept", mediaTypeV3)
+				testBody(t, r, `{"strict":true,"contexts":["continuous-integration"]}`+"\n")
+
 				fmt.Fprint(w, `{
 					"strict":true,
 					"contexts":["continuous-integration"],
@@ -2655,14 +2580,10 @@ func TestRepositoriesService_UpdateRequiredStatusChecks_Checks(t *testing.T) {
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *RequiredStatusChecksRequest
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PATCH")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
 				testHeader(t, r, "Accept", mediaTypeV3)
+				testBody(t, r, `{"strict":true,"checks":[{"context":"continuous-integration"},{"context":"continuous-integration2","app_id":123},{"context":"continuous-integration3","app_id":-1}]}`+"\n")
+
 				fmt.Fprint(w, `{
 					"strict":true,
 					"contexts":["continuous-integration"],
@@ -2937,14 +2858,10 @@ func TestRepositoriesService_UpdatePullRequestReviewEnforcement(t *testing.T) {
 			}
 
 			mux.HandleFunc(test.urlPath, func(w http.ResponseWriter, r *http.Request) {
-				var v *PullRequestReviewsEnforcementUpdate
-				assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 				testMethod(t, r, "PATCH")
-				if !cmp.Equal(v, input) {
-					t.Errorf("Request body = %+v, want %+v", v, input)
-				}
 				testHeader(t, r, "Accept", mediaTypeRequiredApprovingReviewsPreview)
+				testBody(t, r, `{"dismissal_restrictions":{"users":["u"],"teams":["t"],"apps":["a"]},"required_approving_review_count":0}`+"\n")
+
 				fmt.Fprint(w, `{
 					"dismissal_restrictions":{
 						"users":[{"id":1,"login":"u"}],
@@ -4194,13 +4111,8 @@ func TestRepositoriesService_Transfer(t *testing.T) {
 	input := TransferRequest{NewOwner: "a", NewName: Ptr("b"), TeamID: []int64{123}}
 
 	mux.HandleFunc("/repos/o/r/transfer", func(w http.ResponseWriter, r *http.Request) {
-		var v TransferRequest
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
+		testBody(t, r, `{"new_owner":"a","new_name":"b","team_ids":[123]}`+"\n")
 
 		fmt.Fprint(w, `{"owner":{"login":"a"}}`)
 	})
@@ -4233,55 +4145,51 @@ func TestRepositoriesService_Transfer(t *testing.T) {
 
 func TestRepositoriesService_Dispatch(t *testing.T) {
 	t.Parallel()
-	client, mux, _ := setup(t)
 
-	var input DispatchRequestOptions
-
-	mux.HandleFunc("/repos/o/r/dispatches", func(w http.ResponseWriter, r *http.Request) {
-		var v DispatchRequestOptions
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
-		testMethod(t, r, "POST")
-		if !cmp.Equal(v, input) {
-			t.Errorf("Request body = %+v, want %+v", v, input)
-		}
-
-		fmt.Fprint(w, `{"owner":{"login":"a"}}`)
-	})
-
-	ctx := t.Context()
-
-	testCases := []any{
-		nil,
-		struct {
-			Foo string
-		}{
-			Foo: "test",
+	testCases := []DispatchRequestOptions{
+		{
+			EventType: "go1",
 		},
-		struct {
-			Bar int
-		}{
-			Bar: 42,
+		{
+			EventType: "go2",
+			ClientPayload: func() *json.RawMessage {
+				return Ptr(json.RawMessage(`{"Foo":"test"}`))
+			}(),
 		},
-		struct {
-			Foo string
-			Bar int
-			Baz bool
-		}{
-			Foo: "test",
-			Bar: 42,
-			Baz: false,
+		{
+			EventType: "go3",
+			ClientPayload: func() *json.RawMessage {
+				return Ptr(json.RawMessage(`{"Bar":42}`))
+			}(),
+		},
+		{
+			EventType: "go4",
+			ClientPayload: func() *json.RawMessage {
+				return Ptr(json.RawMessage(`{"Foo":"test","Bar":42,"Baz":false}`))
+			}(),
 		},
 	}
 
-	for _, tc := range testCases {
-		if tc == nil {
-			input = DispatchRequestOptions{EventType: "go"}
-		} else {
-			bytes, _ := json.Marshal(tc)
-			payload := json.RawMessage(bytes)
-			input = DispatchRequestOptions{EventType: "go", ClientPayload: &payload}
-		}
+	for _, input := range testCases {
+		client, mux, _ := setup(t)
+
+		mux.HandleFunc("/repos/o/r/dispatches", func(w http.ResponseWriter, r *http.Request) {
+			testMethod(t, r, "POST")
+			switch input.EventType {
+			case "go1":
+				testBody(t, r, `{"event_type":"go1"}`+"\n")
+			case "go2":
+				testBody(t, r, `{"event_type":"go2","client_payload":{"Foo":"test"}}`+"\n")
+			case "go3":
+				testBody(t, r, `{"event_type":"go3","client_payload":{"Bar":42}}`+"\n")
+			case "go4":
+				testBody(t, r, `{"event_type":"go4","client_payload":{"Foo":"test","Bar":42,"Baz":false}}`+"\n")
+			}
+
+			fmt.Fprint(w, `{"owner":{"login":"a"}}`)
+		})
+
+		ctx := t.Context()
 
 		got, _, err := client.Repositories.Dispatch(ctx, "o", "r", input)
 		if err != nil {
@@ -4293,6 +4201,11 @@ func TestRepositoriesService_Dispatch(t *testing.T) {
 			t.Errorf("Repositories.Dispatch returned %+v, want %+v", got, want)
 		}
 	}
+
+	input := DispatchRequestOptions{EventType: "go"}
+
+	client, _, _ := setup(t)
+	ctx := t.Context()
 
 	const methodName = "Dispatch"
 	testBadOptions(t, methodName, func() (err error) {

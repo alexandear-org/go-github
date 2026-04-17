@@ -6,7 +6,6 @@
 package github
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -182,19 +181,9 @@ func TestGitService_CreateCommit(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/git/commits", func(w http.ResponseWriter, r *http.Request) {
-		var v *createCommit
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
+		testBody(t, r, `{"message":"Commit Message.","tree":"t","parents":["p"]}`+"\n")
 
-		want := &createCommit{
-			Message: input.Message,
-			Tree:    Ptr("t"),
-			Parents: []string{"p"},
-		}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
 		fmt.Fprint(w, `{"sha":"s"}`)
 	})
 
@@ -240,20 +229,9 @@ func TestGitService_CreateSignedCommit(t *testing.T) {
 	}
 
 	mux.HandleFunc("/repos/o/r/git/commits", func(w http.ResponseWriter, r *http.Request) {
-		var v *createCommit
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&v))
-
 		testMethod(t, r, "POST")
+		testBody(t, r, `{"message":"Commit Message.","tree":"t","parents":["p"],"signature":"----- BEGIN PGP SIGNATURE -----\n\naaaa\naaaa\n----- END PGP SIGNATURE -----"}`+"\n")
 
-		want := &createCommit{
-			Message:   input.Message,
-			Tree:      Ptr("t"),
-			Parents:   []string{"p"},
-			Signature: &signature,
-		}
-		if !cmp.Equal(v, want) {
-			t.Errorf("Request body = %+v, want %+v", v, want)
-		}
 		fmt.Fprint(w, `{"sha":"commitSha"}`)
 	})
 
@@ -322,17 +300,10 @@ Commit Message.`
 		Parents: []*Commit{{SHA: Ptr("p")}},
 		Author:  &author,
 	}
-	wantBody := createCommit{
-		Message:   input.Message,
-		Tree:      Ptr("t"),
-		Parents:   []string{"p"},
-		Author:    &author,
-		Signature: &signature,
-	}
-	var gotBody createCommit
 	mux.HandleFunc("/repos/o/r/git/commits", func(w http.ResponseWriter, r *http.Request) {
-		assertNilError(t, json.NewDecoder(r.Body).Decode(&gotBody))
 		testMethod(t, r, "POST")
+		testBody(t, r, `{"author":{"date":"2017-05-04T00:03:43+02:00","name":"go-github","email":"go-github@github.com"},"message":"Commit Message.","tree":"t","parents":["p"],"signature":"my voice is my password"}`+"\n")
+
 		fmt.Fprintf(w, `{"sha":"%v"}`, sha)
 	})
 	ctx := t.Context()
@@ -340,9 +311,6 @@ Commit Message.`
 	opts := CreateCommitOptions{Signer: mockSigner(t, signature, nil, wantMessage)}
 	commit, _, err := client.Git.CreateCommit(ctx, "o", "r", input, &opts)
 	assertNilError(t, err)
-	if cmp.Diff(gotBody, wantBody) != "" {
-		t.Errorf("Request body = %+v, want %+v\n%v", gotBody, wantBody, cmp.Diff(gotBody, wantBody))
-	}
 	if cmp.Diff(commit, wantCommit) != "" {
 		t.Errorf("Git.CreateCommit returned %+v, want %+v\n%v", commit, wantCommit, cmp.Diff(commit, wantCommit))
 	}
