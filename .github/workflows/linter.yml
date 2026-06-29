@@ -28,10 +28,10 @@ jobs:
       with:
         go-version: stable
         cache-dependency-path: "**/go.sum"
-    - uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9.2.1
+    - uses: golangci/golangci-lint-action@ff11551cdc017f1a8f189d5abe00cc7b1c15a6fb
       with:
         version: v2.12.2 # sync with version in .custom-gcl.yml
-        experimental: "automatic-module-directories"
+        experimental: "automatic-module-directories,no-run-logs-group"
 
   check-openapi:
     runs-on: ubuntu-latest
